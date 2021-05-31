@@ -1,7 +1,7 @@
 import pygame
 
 pygame.init()
-screen = pygame.display.set_mode((400, 300))
+screen = pygame.display.set_mode((1280, 720))
 done = False
 
 
@@ -11,6 +11,13 @@ class Item:
         self.y = pos_y
         self.z = pos_z
         self.color = (0, 128, 255)
+
+
+class AirPackage(Item):
+    def __init__(self, pos_x, pos_y, temperature, humidity):
+        super().__init__(pos_x, pos_y)
+        self.temperature = temperature
+        self.humidity = humidity
 
 
 class Zone:
@@ -38,14 +45,21 @@ class WorldView:
         self.zones = []
         self.mode = "TOP"
 
+        self.display_x = 1280 / 4
+        self.display_y = 720 / 4
+        self.scale = 4
+
+    def draw_scaled_rect(self,color, x, y, width, height):
+        pygame.draw.rect(screen, color, pygame.Rect(x * self.scale + self.display_x, (100 - y) * self.scale + self.display_y, width * self.scale, height * self.scale))
+
     def draw_zones(self):
         for zone in self.zones:
-            pygame.draw.rect(screen, zone.color, pygame.Rect(zone.x, zone.y, zone.width, zone.height))
+            self.draw_scaled_rect(zone.color, zone.x, zone.y, zone.width, zone.height)
 
     def draw_items(self):
         if self.mode == "TOP":
             for world_item in self.items:
-                pygame.draw.rect(screen, world_item.color, pygame.Rect(world_item.x, world_item.y, 1, 1))
+                self.draw_scaled_rect(world_item.color, world_item.x, world_item.y, 1, 1)
 
 
 class MeteoWorld(WorldView):
@@ -54,14 +68,12 @@ class MeteoWorld(WorldView):
         pressure_moment = 1013.25
         for i in range(self.height):
             if i % 8 == 0:
-                self.zones.append(PressureZone(0, i, 100, 8, pressure_moment))
+                self.zones.append(PressureZone(0, 100 - i, 100, 8, pressure_moment))
                 pressure_moment -= 8
 
 
 my_world = MeteoWorld()
-my_world.items.append(Item(22, 22))
-my_world.items.append(Item(3, 33))
-my_world.items.append(Item(55, 55))
+my_world.items.append(AirPackage(50, 0, 15, 100))
 
 while not done:
     for event in pygame.event.get():
